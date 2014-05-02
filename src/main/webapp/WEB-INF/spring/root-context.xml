@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:aop="http://www.springframework.org/schema/aop"
+    xmlns:tx="http://www.springframework.org/schema/tx" 
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/tx 
+        http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/aop 
+        http://www.springframework.org/schema/aop/spring-aop.xsd"
+        default-lazy-init="false">      
+	
+	<context:component-scan base-package="com.manknow.demo, com.example.greeting" />
+         
+	<context:property-placeholder location="classpath:init.properties" />
+	
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">         
+    
+    	<property name="driverClass" value="${datasource.driverClassName}"/>
+    	<property name="jdbcUrl" value="${datasource.url}"/>
+    	<property name="user" value="${datasource.username}"/>
+    	<property name="password" value="${datasource.password}"/> 
+      
+    	<!-- 连接关闭时默认将所有未提交的操作回滚。默认为false -->  
+    	<property name="autoCommitOnClose" value="true"/>   
+      
+    	<!-- 连接池中保留的最小连接数-->  
+    	<property name="minPoolSize" value="2"/>  
+      
+    	<!-- 连接池中保留的最大连接数。默认为15 -->        
+    	<property name="maxPoolSize" value="15"/>    
+      
+   		<!-- 初始化时获取的连接数，取值应在minPoolSize与maxPoolSize之间。默认为3 -->  
+    	<property name="initialPoolSize" value="3"/>    
+      
+    	<!-- 最大空闲时间，超过空闲时间的连接将被丢弃。为0或负数则永不丢弃。默认为0秒 -->  
+    	<property name="maxIdleTime" value="60"/>        
+      
+    	<!-- 当连接池中的连接用完时，C3P0一次性创建新连接的数目。默认为3 -->  
+    	<property name="acquireIncrement" value="3"/>        
+      
+    	<!-- 定义在从数据库获取新连接失败后重复尝试获取的次数，默认为30 -->  
+    	<property name="acquireRetryAttempts" value="3"/>      
+       
+    	<!-- 当连接池用完时客户端调用getConnection()后等待获取新连接的时间，超时后将抛出SQLException，如设为0则无限期等待。单位毫秒，默认为0 -->  
+    	<property name="checkoutTimeout" value="10000"/>       
+	</bean>  	
+	
+	<bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="namingStrategy">
+			<bean class="org.hibernate.cfg.ImprovedNamingStrategy" />
+		</property>
+		<property name="packagesToScan" value="po" />
+		<!--定义Hibernate的SessionFactory的属性 -->
+		<property name="hibernateProperties">
+			<props>
+				<!--  指定Hibernate的连接方言-->
+				<prop key="hibernate.current_session_context_class">thread</prop>
+				<prop key="hibernate.dialect">${hibernate.dialect}</prop>
+				<prop key="hibernate.connection.autocommit">${hibernate.connection.autocommit}</prop>
+				<!-- 制定Hibernate是否打印SQL语句 -->
+				<prop key="hibernate.show_sql">${hibernate.show_sql}</prop>
+				<prop key="hibernate.format_sql">${hibernate.format_sql}</prop>
+				<!--设create(启动创建),create-drop(启动创建,退出删除),update(启动更新),validate(启动验证)-->
+				<prop key="hibernate.hbm2ddl.auto">${hibernate.hbm2ddl.auto}</prop>
+				<!-- 设置二级缓存 -->
+				<prop key="hibernate.cache.user_query_cache">${hibernate.cache.user_query_cache}</prop>
+				<prop key="hibernate.user_second_level_cache">${hibernate.user_second_level_cache}</prop>
+				<prop key="hibernate.cache.provider_class">${hibernate.cache.class}</prop>
+				<prop key="hibernate.cache.provider_configuration_file_resource_path">${hibernate.ehcache_config_file}</prop>
+			</props>
+		</property>
+	</bean>
+	<bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+    	<property name="sessionFactory" ref="sessionFactory"/>
+	</bean>	
+	<tx:annotation-driven transaction-manager="transactionManager"
+		proxy-target-class="true" />	
+	
+		
+</beans>
